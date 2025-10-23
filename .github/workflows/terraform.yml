@@ -24,28 +24,22 @@ jobs:
           terraform_version: 1.5.7
 
       # ------------------------------
-      # Run Terraform inside out_iac
+      # Terraform from repo root
       # ------------------------------
       - name: Terraform Init
-        working-directory: ./out_iac
         run: terraform init -input=false -backend-config="path=terraform.tfstate"
 
       - name: Terraform Validate
-        working-directory: ./out_iac
         run: terraform validate
 
       - name: Terraform Format Check
-        working-directory: ./out_iac
         run: terraform fmt -check
 
       - name: Terraform Plan
-        working-directory: ./out_iac
         run: terraform plan -out=tfplan -input=false
 
       - name: Terraform Apply
-        working-directory: ./out_iac
         run: terraform apply -auto-approve tfplan
 
       - name: Terraform Outputs
-        working-directory: ./out_iac
         run: terraform output
