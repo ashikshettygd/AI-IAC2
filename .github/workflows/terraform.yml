@@ -8,7 +8,6 @@ on:
 
 jobs:
   terraform:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     env:
@@ -17,28 +16,40 @@ jobs:
       AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
 
     steps:
+      # 1. Checkout the repository
       - name: Checkout Repo
         uses: actions/checkout@v4
 
+      # 2. Sleep for 1 minute to ensure all files are available
+      - name: Wait for files to be fully committed
+        run: sleep 60
+
+      # 3. Set up Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.7
 
+      # 4. Terraform Init
       - name: Terraform Init
         run: terraform init -input=false -backend-config="path=terraform.tfstate"
 
+      # 5. Terraform Validate
       - name: Terraform Validate
         run: terraform validate
 
+      # 6. Terraform Format Check
       - name: Terraform Format Check
         run: terraform fmt -check
 
+      # 7. Terraform Plan
       - name: Terraform Plan
         run: terraform plan -out=tfplan -input=false
 
+      # 8. Terraform Apply
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
 
+      # 9. Terraform Outputs
       - name: Terraform Outputs
         run: terraform output
