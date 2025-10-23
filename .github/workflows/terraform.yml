@@ -26,27 +26,32 @@ jobs:
         with:
           terraform_version: 1.5.7
 
-      # 3. Terraform Init
-      # Use local backend instead of S3, so init never fails
+      # 3. Terraform Init (local backend)
       - name: Terraform Init
         run: terraform init -input=false -backend-config="path=terraform.tfstate"
+        working-directory: out_iac
 
       # 4. Validate Terraform files
       - name: Terraform Validate
         run: terraform validate
+        working-directory: out_iac
 
       # 5. Check Terraform formatting
       - name: Terraform Format Check
         run: terraform fmt -check
+        working-directory: out_iac
 
       # 6. Terraform Plan (create a plan file)
       - name: Terraform Plan
         run: terraform plan -out=tfplan -input=false
+        working-directory: out_iac
 
       # 7. Terraform Apply (apply the plan)
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
+        working-directory: out_iac
 
       # 8. Optional: Show outputs for reference
       - name: Terraform Outputs
         run: terraform output
+        working-directory: out_iac
