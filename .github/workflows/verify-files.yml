@@ -1,0 +1,29 @@
+name: Verify Terraform Files
+
+on:
+  push:
+    branches:
+      - 'dev-*'
+
+jobs:
+  verify-files:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Check Terraform Files
+        run: |
+          REQUIRED_FILES=("main.tf" "variables.tf" "outputs.tf" "provider.tf" "terraform.tfvars" "versions.tf" "data.tf" "backend.tf")
+          MISSING=()
+          for f in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$f" ]; then
+              MISSING+=("$f")
+            fi
+          done
+          if [ ${#MISSING[@]} -ne 0 ]; then
+            echo "❌ Missing files: ${MISSING[*]}"
+            exit 1
+          fi
+          echo "✅ All required Terraform files are present."
