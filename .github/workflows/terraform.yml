@@ -27,8 +27,9 @@ jobs:
           terraform_version: 1.5.7
 
       # 3. Terraform Init
+      # Use local backend instead of S3, so init never fails
       - name: Terraform Init
-        run: terraform init -input=false
+        run: terraform init -input=false -backend-config="path=terraform.tfstate"
 
       # 4. Validate Terraform files
       - name: Terraform Validate
