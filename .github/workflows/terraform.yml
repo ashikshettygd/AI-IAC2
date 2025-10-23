@@ -20,9 +20,11 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}   # ensures it checks out the branch that triggered the workflow
+          ref: ${{ github.event.workflow_run.head_branch }}   # ensures it checks out the branch that triggered the workflow
 
-
+      - name: List repo files
+        run: ls -R
+  
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
