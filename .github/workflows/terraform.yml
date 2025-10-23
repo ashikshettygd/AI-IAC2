@@ -19,6 +19,9 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}   # ensures it checks out the branch that triggered the workflow
+
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
