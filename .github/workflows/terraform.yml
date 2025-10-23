@@ -26,36 +26,32 @@ jobs:
         with:
           terraform_version: 1.5.7
 
-      # 3. Ensure out_iac folder exists
-      - name: Ensure Terraform folder
-        run: mkdir -p out_iac
-
-      # 4. Terraform Init (use local backend)
+      # 3. Terraform Init (local backend)
       - name: Terraform Init
-        working-directory: out_iac
+        working-directory: ./out_iac
         run: terraform init -input=false -backend-config="path=terraform.tfstate"
 
-      # 5. Validate Terraform files
+      # 4. Validate Terraform files
       - name: Terraform Validate
-        working-directory: out_iac
+        working-directory: ./out_iac
         run: terraform validate
 
-      # 6. Check Terraform formatting
+      # 5. Check Terraform formatting
       - name: Terraform Format Check
-        working-directory: out_iac
+        working-directory: ./out_iac
         run: terraform fmt -check
 
-      # 7. Terraform Plan (create a plan file)
+      # 6. Terraform Plan (create a plan file)
       - name: Terraform Plan
-        working-directory: out_iac
+        working-directory: ./out_iac
         run: terraform plan -out=tfplan -input=false
 
-      # 8. Terraform Apply (apply the plan)
+      # 7. Terraform Apply (apply the plan)
       - name: Terraform Apply
-        working-directory: out_iac
+        working-directory: ./out_iac
         run: terraform apply -auto-approve tfplan
 
-      # 9. Optional: Show outputs for reference
+      # 8. Optional: Show outputs for reference
       - name: Terraform Outputs
-        working-directory: out_iac
+        working-directory: ./out_iac
         run: terraform output
