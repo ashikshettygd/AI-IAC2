@@ -15,36 +15,28 @@ jobs:
       AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
 
     steps:
-      # 1. Checkout the repository
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      # 2. Set up Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.7
 
-      # 3. Terraform Init (root repo)
       - name: Terraform Init
         run: terraform init -input=false -backend-config="path=terraform.tfstate"
 
-      # 4. Validate Terraform files
       - name: Terraform Validate
         run: terraform validate
 
-      # 5. Check Terraform formatting
       - name: Terraform Format Check
         run: terraform fmt -check
 
-      # 6. Terraform Plan (create a plan file)
       - name: Terraform Plan
         run: terraform plan -out=tfplan -input=false
 
-      # 7. Terraform Apply (apply the plan)
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
 
-      # 8. Optional: Show outputs for reference
       - name: Terraform Outputs
         run: terraform output
