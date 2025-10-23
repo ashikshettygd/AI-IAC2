@@ -17,36 +17,42 @@ jobs:
       AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
 
     steps:
+      # 1. Checkout the branch that triggered the workflow
       - name: Checkout Repo
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_branch }}   # ensures it checks out the branch that triggered the workflow
+          ref: ${{ github.event.workflow_run.head_branch }}
 
+      # 2. Verify repo files (debug)
       - name: List repo files
         run: ls -R
-  
+
+      # 3. Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.7
 
+      # 4. Terraform Init (backend config is already in backend.tf)
       - name: Terraform Init
-        run: terraform init -input=false -backend-config="path=terraform.tfstate"
+        run: terraform init -input=false
 
+      # 5. Validate Terraform files
       - name: Terraform Validate
         run: terraform validate
 
+      # 6. Check Terraform formatting
       - name: Terraform Format Check
         run: terraform fmt -check
 
-      - name: List repo files
-        run: ls -R
-
+      # 7. Terraform Plan
       - name: Terraform Plan
         run: terraform plan -out=tfplan -input=false
 
+      # 8. Terraform Apply
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
 
+      # 9. Terraform Outputs
       - name: Terraform Outputs
         run: terraform output
