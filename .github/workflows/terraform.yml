@@ -36,7 +36,7 @@ jobs:
       # 4️⃣  Save Private Key (.pem) from GitHub Secret
       - name: Restore PEM key
         run: |
-          echo "${{ secrets.EC2_PRIVATE_KEY }}" | tr -d '\r' > my-key.pem
+          echo "${{ secrets.EC2_PRIVATE_KEY_B64 }}" | base64 --decode > my-key.pem
           chmod 600 my-key.pem
 
       # 5️⃣  Export Public Key for Terraform variable
