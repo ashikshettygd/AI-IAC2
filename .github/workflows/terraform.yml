@@ -33,26 +33,37 @@ jobs:
         with:
           terraform_version: 1.5.7
 
-      # 4. Terraform Init (backend config is already in backend.tf)
+      # 4️⃣  Save Private Key (.pem) from GitHub Secret
+      - name: Create Private Key file
+        run: |
+          echo "${{ secrets.EC2_PRIVATE_KEY }}" > my-key.pem
+          chmod 600 my-key.pem
+
+      # 5️⃣  Export Public Key for Terraform variable
+      - name: Export Public Key
+        run: |
+          ssh-keygen -y -f my-key.pem > my-key.pub
+
+      # 6. Terraform Init
       - name: Terraform Init
         run: terraform init -input=false
 
-      # 5. Validate Terraform files
+      # 7. Terraform Validate
       - name: Terraform Validate
         run: terraform validate
 
-      # 6. Check Terraform formatting
+      # 8. Terraform Format Check
       - name: Terraform Format Check
         run: terraform fmt -check
 
-      # 7. Terraform Plan
+      # 9️⃣  Terraform Plan
       - name: Terraform Plan
-        run: terraform plan -out=tfplan -input=false
+        run: terraform plan -var "public_key=$(cat my-key.pub)" -out=tfplan -input=false
 
-      # 8. Terraform Apply
+      # 🔟 Terraform Apply
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
 
-      # 9. Terraform Outputs
+      # 11. Terraform Outputs
       - name: Terraform Outputs
         run: terraform output
