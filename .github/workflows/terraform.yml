@@ -17,53 +17,60 @@ jobs:
       AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
 
     steps:
-      # 1. Checkout the branch that triggered the workflow
+      # 1️⃣ Checkout the branch that triggered the workflow
       - name: Checkout Repo
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
 
-      # 2. Verify repo files (debug)
+      # 2️⃣ Verify repo files (debug)
       - name: List repo files
         run: ls -R
 
-      # 3. Setup Terraform
+      # 3️⃣ Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.7
 
-      # 4️⃣  Save Private Key (.pem) from GitHub Secret
-      - name: Restore PEM key
+      # 4️⃣ Restore PEM key (only if secret exists)
+      - name: Restore PEM key (optional)
+        if: ${{ secrets.EC2_PRIVATE_KEY_B64 != '' }}
         run: |
           echo "${{ secrets.EC2_PRIVATE_KEY_B64 }}" | base64 --decode > my-key.pem
           chmod 600 my-key.pem
 
-      # 5️⃣  Export Public Key for Terraform variable
+      # 5️⃣ Export Public Key (only if PEM restored)
       - name: Export Public Key
+        if: ${{ secrets.EC2_PRIVATE_KEY_B64 != '' }}
         run: |
           ssh-keygen -y -f my-key.pem > my-key.pub
 
-      # 6. Terraform Init
+      # 6️⃣ Terraform Init
       - name: Terraform Init
         run: terraform init -input=false
 
-      # 7. Terraform Validate
+      # 7️⃣ Terraform Validate
       - name: Terraform Validate
         run: terraform validate
 
-      # 8. Terraform Format Check
+      # 8️⃣ Terraform Format Check
       - name: Terraform Format Check
         run: terraform fmt -check
 
-      # 9️⃣  Terraform Plan
+      # 9️⃣ Terraform Plan (conditionally include public_key)
       - name: Terraform Plan
-        run: terraform plan -var "public_key=$(cat my-key.pub)" -out=tfplan -input=false
+        run: |
+          if [ -f "my-key.pub" ]; then
+            terraform plan -var "public_key=$(cat my-key.pub)" -out=tfplan -input=false
+          else
+            terraform plan -out=tfplan -input=false
+          fi
 
       # 🔟 Terraform Apply
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
 
-      # 11. Terraform Outputs
+      # 1️⃣1️⃣ Terraform Outputs
       - name: Terraform Outputs
         run: terraform output
