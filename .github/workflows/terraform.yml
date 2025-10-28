@@ -33,16 +33,14 @@ jobs:
         with:
           terraform_version: 1.5.7
 
-      # 4️⃣ Restore PEM key (only if secret exists)
-      - name: Restore PEM key (optional)
-        if: ${{ secrets.EC2_PRIVATE_KEY_B64 != '' }}
+      # 4️⃣ Save Private Key (.pem) from GitHub Secret
+      - name: Restore PEM key
         run: |
           echo "${{ secrets.EC2_PRIVATE_KEY_B64 }}" | base64 --decode > my-key.pem
           chmod 600 my-key.pem
 
-      # 5️⃣ Export Public Key (only if PEM restored)
+      # 5️⃣ Export Public Key for Terraform variable
       - name: Export Public Key
-        if: ${{ secrets.EC2_PRIVATE_KEY_B64 != '' }}
         run: |
           ssh-keygen -y -f my-key.pem > my-key.pub
 
@@ -58,19 +56,14 @@ jobs:
       - name: Terraform Format Check
         run: terraform fmt -check
 
-      # 9️⃣ Terraform Plan (conditionally include public_key)
+      # 9️⃣ Terraform Plan
       - name: Terraform Plan
-        run: |
-          if [ -f "my-key.pub" ]; then
-            terraform plan -var "public_key=$(cat my-key.pub)" -out=tfplan -input=false
-          else
-            terraform plan -out=tfplan -input=false
-          fi
+        run: terraform plan -var "public_key=$(cat my-key.pub)" -out=tfplan -input=false
 
       # 🔟 Terraform Apply
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
 
-      # 1️⃣1️⃣ Terraform Outputs
+      # 11️⃣ Terraform Outputs
       - name: Terraform Outputs
         run: terraform output
