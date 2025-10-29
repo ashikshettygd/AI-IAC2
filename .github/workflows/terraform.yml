@@ -61,7 +61,7 @@ jobs:
 
       # 8️⃣ Terraform Format Check
       - name: Terraform Format Check
-        run: terraform fmt -check
+        run: terraform fmt -recursive
 
       # 9️⃣ Terraform Plan (conditionally include public key)
       - name: Terraform Plan
