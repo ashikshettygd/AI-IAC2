@@ -3,8 +3,7 @@ name: Terraform CI/CD
 on:
   workflow_run:
     workflows: ["Verify Terraform Files"]
-    types:
-      - completed
+    types: [completed]
 
 jobs:
   terraform:
@@ -17,13 +16,13 @@ jobs:
       AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
 
     steps:
-      # 1️⃣ Checkout the branch that triggered the workflow
+      # 1️⃣ Checkout
       - name: Checkout Repo
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
 
-      # 2️⃣ Verify repo files (debug)
+      # 2️⃣ List files (debug)
       - name: List repo files
         run: ls -R
 
@@ -33,16 +32,24 @@ jobs:
         with:
           terraform_version: 1.5.7
 
-      # 4️⃣ Save Private Key (.pem) from GitHub Secret
+      # 4️⃣ Restore PEM key (for EC2 or Lightsail only)
       - name: Restore PEM key
         run: |
           echo "${{ secrets.EC2_PRIVATE_KEY_B64 }}" | base64 --decode > my-key.pem
           chmod 600 my-key.pem
 
-      # 5️⃣ Export Public Key for Terraform variable
-      - name: Export Public Key
+      # 5️⃣ Export Public Key (conditionally)
+      - name: Export Public Key (if needed)
+        id: public_key
         run: |
-          ssh-keygen -y -f my-key.pem > my-key.pub
+          if grep -qE 'aws_instance|aws_lightsail_instance' *.tf; then
+            echo "EC2 or Lightsail detected — generating public key"
+            ssh-keygen -y -f my-key.pem > my-key.pub
+            echo "needs_public_key=true" >> $GITHUB_OUTPUT
+          else
+            echo "No EC2/Lightsail — skipping public key"
+            echo "needs_public_key=false" >> $GITHUB_OUTPUT
+          fi
 
       # 6️⃣ Terraform Init
       - name: Terraform Init
@@ -56,9 +63,14 @@ jobs:
       - name: Terraform Format Check
         run: terraform fmt -check
 
-      # 9️⃣ Terraform Plan
+      # 9️⃣ Terraform Plan (conditionally include public key)
       - name: Terraform Plan
-        run: terraform plan -var "public_key=$(cat my-key.pub)" -out=tfplan -input=false
+        run: |
+          if [ "${{ steps.public_key.outputs.needs_public_key }}" = "true" ]; then
+            terraform plan -var "public_key=$(cat my-key.pub)" -out=tfplan -input=false
+          else
+            terraform plan -out=tfplan -input=false
+          fi
 
       # 🔟 Terraform Apply
       - name: Terraform Apply
